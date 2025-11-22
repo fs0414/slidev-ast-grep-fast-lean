@@ -19,6 +19,11 @@
         "initial_instructions"
       ]
     },
+    "permission": {
+      "allow": [
+        "mcp_chrome-devtools"
+      ]
+    },
     "chrome-devtools": {
       "command": "bunx",
       "args": ["-y", "chrome-devtools-mcp@latest"]
