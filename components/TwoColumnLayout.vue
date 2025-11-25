@@ -18,11 +18,11 @@ const gridCols = computed(() => {
   return `${props.leftRatio}fr ${props.rightRatio}fr`
 })
 
-const gapClass = computed(() => `gap-${props.gap}`)
+const gridGap = computed(() => `${props.gap * 0.25}rem`)
 </script>
 
 <template>
-  <div class="two-column-layout" :class="gapClass">
+  <div class="two-column-layout">
     <div class="column-left">
       <slot name="left" />
     </div>
@@ -36,6 +36,7 @@ const gapClass = computed(() => `gap-${props.gap}`)
 .two-column-layout {
   display: grid;
   grid-template-columns: v-bind(gridCols);
+  grid-gap: v-bind(gridGap);
   width: 100%;
 }
 
@@ -43,5 +44,13 @@ const gapClass = computed(() => `gap-${props.gap}`)
 .column-right {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* コードブロックがカラムの幅いっぱいに広がらないように調整 */
+.column-left :deep(pre),
+.column-right :deep(pre) {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 </style>

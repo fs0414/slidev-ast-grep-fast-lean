@@ -7,7 +7,7 @@ lineNumbers: true
 drawings:
   persist: false
 transition: slide-left
-title: 速習 ast-grep
+title: fast lean, ast-grep
 mdc: true
 fonts:
   sans: 'Roboto'
@@ -16,7 +16,7 @@ fonts:
 ---
 
 <CoverSlide
-  title="速習 ast-grep"
+  title="fast lean, ast-grep"
   subtitle=""
   event="Terminal Night #1"
   author="fujitani sora"
@@ -30,14 +30,17 @@ fonts:
   <template #left>
 
 - **fujitani sora** / @_fs0414
-- <EmojiText emoji="🏢">株式会社xxx・software engineer</EmojiText>
-- <EmojiText emoji="🎤">xxx</EmojiText>
-- <EmojiText emoji="💻">xxx</EmojiText>
-- <EmojiText emoji="🌆">xxx</EmojiText>
+- <EmojiText emoji="👶">2001（24）</EmojiText>
+- <EmojiText emoji="🏢">株式会社トリドリ・software engineer</EmojiText>
+- <EmojiText emoji="🎤">技育CAMPの公式メンター</EmojiText>
+- <EmojiText emoji="💪">TSKaigiの運営</EmojiText>
+- <EmojiText emoji="💻">NeoVim, WebTerm, ClaudeCode, </EmojiText>
 
 <br> 
 
-👋 
+最近はCodeFormatterに凝っています。<br/>
+Prettierのバグを直したり、自作のRust製Ruby Code Formatterを公開したり<br/>
+https://github.com/fs0414/rfmt
 
   </template>
   <template #right>
@@ -68,8 +71,8 @@ fonts:
 
 # 文字列ベースの検索
 
-<TwoColumnLayout>
-  <template #left>
+<!-- <TwoColumnLayout> -->
+<!--   <template #left> -->
 
 ```bash
 $ grep "isNode" src/
@@ -81,8 +84,8 @@ $ grep "isNode" src/
 <li>コードの構造は考慮しない</li>
 </ul>
 
-  </template>
-  <template #right>
+  <!-- </template> -->
+  <!-- <template #right> -->
 
 ```javascript
 // すべてマッチする
@@ -91,8 +94,8 @@ isNode(node, ["type"])           // ← 検索対象
 const text = "isNode function"  // ← 文字列リテラル
 ```
 
-  </template>
-</TwoColumnLayout>
+<!--   </template> -->
+<!-- </TwoColumnLayout> -->
 
 ---
 
@@ -272,9 +275,9 @@ $ grep "isNode.*\[" src/language-yaml/
 ---
 
 # フォーマット非依存検索 - ast-grepの場合
-
-<TwoColumnLayout>
-  <template #left>
+<!---->
+<!-- <TwoColumnLayout> -->
+<!--   <template #left> -->
 
 ```bash
 $ ast-grep --lang js --pattern 'isNode($NODE, [$$$])' src/language-yaml/
@@ -282,8 +285,8 @@ $ ast-grep --lang js --pattern 'isNode($NODE, [$$$])' src/language-yaml/
 
 **すべてのフォーマットを検出!**
 
-  </template>
-  <template #right>
+  <!-- </template> -->
+  <!-- <template #right> -->
 
 **結果:**
 ```
@@ -296,8 +299,8 @@ $ ast-grep --lang js --pattern 'isNode($NODE, [$$$])' src/language-yaml/
 ✅ isNode(node,["type"])
 ```
 
-  </template>
-</TwoColumnLayout>
+<!--   </template> -->
+<!-- </TwoColumnLayout> -->
 
 ---
 
@@ -438,17 +441,17 @@ items.at(-1)
 
 # リファクタリング候補の検出
 
-<TwoColumnLayout>
-  <template #left>
+<!-- <TwoColumnLayout> -->
+<!--   <template #left> -->
 
 **実行:**
 ```bash
 $ ast-grep scan --rule modernize-array.yml src/language-yaml/utils.js
 ```
 
-  </template>
-  <template #right>
-
+  <!-- </template> -->
+  <!-- <template #right> -->
+<br/>
 ```yaml
 id: modernize-array-access
 language: js
@@ -459,8 +462,8 @@ rule:
 message: Consider using modern array.at(-1) syntax
 ```
 
-  </template>
-</TwoColumnLayout>
+<!--   </template> -->
+<!-- </TwoColumnLayout> -->
 
 ---
 
