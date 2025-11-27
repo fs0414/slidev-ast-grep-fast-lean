@@ -1,7 +1,7 @@
 # fast lean, ast-grep
 
-Terminal Night #1 発表資料
-https://kichijojipm.connpass.com/event/373896/
+Terminal Night #1 発表資料<br/>
+![https://kichijojipm.connpass.com/event/373896/](https://kichijojipm.connpass.com/event/373896/)
 
 ## 📖 スライド
 
@@ -31,7 +31,7 @@ bun run export
 ## 🔗 リンク
 
 - ast-grep: https://ast-grep.github.io/
-- 発表者: [@_fs0414](https://twitter.com/_fs0414)
+- speaker: [@_fs0414](https://twitter.com/_fs0414)
 
 ---
 
