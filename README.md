@@ -1,7 +1,7 @@
 # fast lean, ast-grep
 
 Terminal Night #1 発表資料<br/>
-![https://kichijojipm.connpass.com/event/373896/](https://kichijojipm.connpass.com/event/373896/)
+[https://kichijojipm.connpass.com/event/373896/](https://kichijojipm.connpass.com/event/373896/)
 
 ## 📖 スライド
 
