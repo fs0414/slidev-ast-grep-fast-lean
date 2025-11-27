@@ -189,12 +189,6 @@ CallExpression:
 | **正規表現** | 中 | 中 | 部分的 | 非対応 |
 | **ASTを利用** | 低 | 高 | 対応 | 対応 |
 
-**ast-grepの用途:**
-- 厳密性のあるコードパターンの検索
-- 検索パターンをymlで管理, 共有
-- 構文木で一致するコードの一括置換
-- 特定言語に依存しない汎用ツールである
-
 ---
 
 # ast-grep : ASTベースの検索ツール
@@ -260,24 +254,24 @@ console.warn()              // マッチ
 
 ---
 
-# 基本コマンド
-
-**1. パターン検索**
-```bash
-ast-grep --lang js --pattern 'PATTERN' [ファイル]
-```
-
-**2. 置換（プレビュー）**
-```bash
-ast-grep --pattern 'OLD' --rewrite 'NEW' [ファイル]
-```
-
-**3. YAMLルールで検索**
-```bash
-ast-grep scan --rule rule.yml [ディレクトリ]
-```
-
----
+<!-- # 基本コマンド -->
+<!---->
+<!-- **1. パターン検索** -->
+<!-- ```bash -->
+<!-- ast-grep --lang js --pattern 'PATTERN' [ファイル] -->
+<!-- ``` -->
+<!---->
+<!-- **2. 置換（プレビュー）** -->
+<!-- ```bash -->
+<!-- ast-grep --pattern 'OLD' --rewrite 'NEW' [ファイル] -->
+<!-- ``` -->
+<!---->
+<!-- **3. YAMLルールで検索** -->
+<!-- ```bash -->
+<!-- ast-grep scan --rule rule.yml [ディレクトリ] -->
+<!-- ``` -->
+<!---->
+<!-- --- -->
 
 # 実践例1 - フォーマット非依存検索
 <br/>
@@ -324,7 +318,7 @@ $ grep "isNode.*\[" src/language-yaml/
 ```
 ✅ isNode(node, ["sequence", "mapping"])
 ✅ isNode(node,["type"])
-❌ isNode(node, [\n     # 複数行は検出できない
+❌ isNode(node, [\n     // 複数行は検出できない
 ```
 
   </template>
@@ -341,7 +335,7 @@ $ grep "isNode.*\[" src/language-yaml/
 $ ast-grep --lang js --pattern 'isNode($NODE, [$$$])' src/language-yaml/
 ```
 
-**すべてのフォーマットを検出!**
+**すべてのフォーマットを検出**
 
   <!-- </template> -->
   <!-- <template #right> -->
@@ -365,7 +359,7 @@ $ ast-grep --lang js --pattern 'isNode($NODE, [$$$])' src/language-yaml/
 # 実際の検出結果
 
 ```
-src/language-yaml/print/misc.js:32:
+// src/language-yaml/print/misc.js:32:
     !isNode(node, [
       "documentHead",
       "documentBody",
@@ -373,7 +367,7 @@ src/language-yaml/print/misc.js:32:
       "flowSequence",
     ])
 
-src/language-yaml/printer-yaml.js:83:
+// src/language-yaml/printer-yaml.js:83:
     if (isNode(node, ["sequence", "mapping"]) && ...)
 
 src/language-yaml/printer-yaml.js:115:
@@ -390,7 +384,7 @@ src/language-yaml/printer-yaml.js:115:
 <!--   <template #left> -->
 <br/>
 
-**prettierでの実例: 配列の存在と要素チェック**
+**配列の存在と要素チェック**
 
 **目的: 空でない配列をチェックする様々なパターンを検出**
 
@@ -427,7 +421,7 @@ $ ast-grep --pattern 'if ($ARRAY && $ARRAY.length > 0)' src/
 $ ast-grep --pattern 'isNonEmptyArray($ARG)' src/
 ```
 
-**prettierでの実際の検出結果:**
+**検出結果:**
 ```
 ✅ src/language-js/print.js:89    if (node.decorators && node.decorators.length > 0)
 ✅ src/language-js/utils.js:234   if (comments && comments.length > 0)
@@ -480,7 +474,7 @@ severity: warning
 
 **配列の最後の要素へのアクセス**
 
-**prettierコードベースには両方が混在している!**
+**prettierコードベースには両方が混在している**
 
   </template>
   <template #right>
@@ -522,7 +516,7 @@ message: Consider using modern array.at(-1) syntax
 
 # 検出結果とリファクタリング
 
-**prettier の utils.js での検出結果**
+**utils.js での検出結果**
 
 ```
 help[modernize-array-access]:
@@ -737,7 +731,20 @@ severity: error
 <!---->
 <!-- --- -->
 
-# インストールと環境構築
+# 総じて好きなところ
+
+- 検索パターンをymlで管理, 共有できる
+  - 情報が永続化して読み取り可能であることはAgenticCodgingにとって重要だと思っている
+- 構文木で一致するコードの一括置換が可能である
+- 特定言語に依存しない汎用ツールである
+  - 構文解析可能であれば
+  - 個別のCustomLintを理解するよりも汎用的な仕組みかな？と思う
+- 使い手次第で色々できる拡張性
+- astに関する知識の隠蔽, toolとしてのinterfaceが優れているなと思う
+
+---
+
+# install
 
 **インストール:**
 ```bash
@@ -745,6 +752,7 @@ severity: error
 brew install ast-grep
 
 # bun
+
 bun install @ast-grep/cli
 
 # cargo
@@ -758,16 +766,17 @@ ast-grep --version
 
 ---
 
-# 学習リソース
+# Reference
 
-**公式リソース:**
 - **公式ドキュメント**: https://ast-grep.github.io/
 - **Playground**: https://ast-grep.github.io/playground.html
 - **パターン構文ガイド**: https://ast-grep.github.io/guide/pattern-syntax.html
 - **GitHub**: https://github.com/ast-grep/ast-grep
 
 ---
+layout: center
+---
 
-# ご清聴ありがとうございました
+# see you later
 
 👋
