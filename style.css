@@ -158,12 +158,130 @@ code {
   font-size: 0.9em;
   padding: 0.2em 0.4em;
   border-radius: 4px;
-  background: color-mix(in oklch, var(--color-primary) 10%, transparent);
+  background: oklch(0.9 0.03 200 / 0.15);
+  color: oklch(0.45 0.15 195);
 }
 
 pre code {
   padding: 0;
   background: transparent;
+  color: inherit;
+}
+
+/* Shiki コードブロックの背景調整 */
+.shiki {
+  background: oklch(0.08 0.015 200) !important; /* 濃紺の背景 */
+  padding: 1.5rem !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px oklch(0 0 0 / 0.2);
+}
+
+.dark .shiki {
+  background: oklch(0.06 0.015 200) !important;
+}
+
+/* Diff ブロックのカラーリング */
+.diff-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.diff-block pre:first-of-type .shiki {
+  background: linear-gradient(
+    to right,
+    rgba(255, 50, 50, 0.15),
+    rgba(255, 50, 50, 0.05)
+  ) !important;
+  border-left: 3px solid #ff5050 !important;
+}
+
+.diff-block pre:last-of-type .shiki {
+  background: linear-gradient(
+    to right,
+    rgba(50, 255, 50, 0.15),
+    rgba(50, 255, 50, 0.05)
+  ) !important;
+  border-left: 3px solid #50ff50 !important;
+}
+
+/* シンタックスハイライトのカスタマイズ - 水色系 */
+/* Shikiのトークンクラスに対するスタイル上書き */
+
+/* デフォルトテキスト - 白 */
+.shiki,
+.shiki span {
+  color: #ffffff !important;
+}
+
+/* 文字列、属性値 - 明るい水色 (cyan) */
+.shiki span[style*="color:#A3BE8C"],
+.shiki span[style*="color:#8FBCBB"],
+.shiki span[style*="color:#88C0D0"],
+.shiki span[style*="color:#EBCB8B"],
+.shiki span[style*="color:#A3BE8C"] {
+  color: #5fd7ff !important; /* 明るい水色 */
+}
+
+/* キーワード、演算子、タグ - 水色 */
+.shiki span[style*="color:#81A1C1"] {
+  color: #00bfff !important; /* 水色 */
+}
+
+/* 関数、メソッド、プロパティ - 濃い水色 */
+.shiki span[style*="color:#8FBCBB"] {
+  color: #0087af !important; /* 濃い水色 */
+}
+
+/* コメント - 暗めの水色 */
+.shiki span[style*="color:#616E88"],
+.shiki span[style*="color:#4C566A"] {
+  color: #5f8787 !important; /* 暗めの水色 */
+  font-style: italic;
+}
+
+/* 変数、定数 - 明るい水色 */
+.shiki span[style*="color:#D8DEE9"],
+.shiki span[style*="color:#E5E9F0"],
+.shiki span[style*="color:#ECEFF4"] {
+  color: #87ffff !important; /* 明るい水色 */
+}
+
+/* 特殊変数やメタ変数 ($$$, $VAR など) - 特に明るい水色 */
+.shiki span[style*="color:#88C0D0"],
+.shiki span[style*="color:#5E81AC"],
+.shiki span[style*="color:#BF616A"],
+.shiki span[style*="color:#D08770"],
+.shiki span[style*="color:#EBCB8B"] {
+  color: #00ffff !important; /* 非常に明るい水色（シアン） */
+  font-weight: 600;
+  text-shadow: 0 0 3px rgba(0, 255, 255, 0.5); /* 光る効果を追加 */
+}
+
+/* 数値、ブーリアン - シアン系の水色 */
+.shiki span[style*="color:#B48EAD"] {
+  color: #00d7d7 !important; /* シアン系水色 */
+}
+
+/* 特別な調整：括弧、セミコロンなど - 白 */
+.shiki span[style*="color:#D8DEE9E5"],
+.shiki span[style*="color:#81A1C1"] {
+  color: #ffffff !important;
+}
+
+/* より汎用的な方法：Shikiのdata属性を使用 */
+[data-theme="nord"] .shiki {
+  background: #0d1117 !important; /* 深い青黒背景 */
+}
+
+[data-theme="nord"] .shiki code {
+  color: #ffffff !important;
+}
+
+/* 行番号のスタイル */
+.shiki .line-number {
+  color: #5f8787 !important;
+  opacity: 0.7;
 }
 
 /* v-click要素 */

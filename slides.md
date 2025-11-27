@@ -4,6 +4,8 @@ background: false
 class: text-center
 highlighter: shiki
 lineNumbers: true
+shikiConfig:
+  theme: 'nord'
 drawings:
   persist: false
 transition: slide-left
@@ -30,18 +32,19 @@ fonts:
   <template #left>
 
 - **fujitani sora** / @_fs0414
-- <EmojiText emoji="👶">2001（24）</EmojiText>
+- <EmojiText emoji="👤">2001（24）</EmojiText>
 - <EmojiText emoji="🏢">株式会社トリドリ・software engineer</EmojiText>
 - <EmojiText emoji="🎤">技育CAMPの公式メンター</EmojiText>
 - <EmojiText emoji="💪">TSKaigiの運営</EmojiText>
-- <EmojiText emoji="💻">NeoVim, WebTerm, ClaudeCode, </EmojiText>
+- <EmojiText emoji="💻">Terminal Use : NeoVim, WebTerm, ClaudeCode, </EmojiText>
+- <EmojiText emoji="📱">Photo, Post 👌</EmojiText>
 
-<br> 
-
-最近はCodeFormatterに凝っています。<br/>
+<p>最近のTips</p>
+CodeFormatterに凝っています。<br/>
 Prettierのバグを直したり、自作のRust製Ruby Code Formatterを公開したり<br/>
-https://github.com/fs0414/rfmt
-
+<div>
+<a href="https://github.com/fs0414/rfmt">https://github.com/fs0414/rfmt</a>
+</div>
   </template>
   <template #right>
 
@@ -66,6 +69,20 @@ https://github.com/fs0414/rfmt
 6. 実践例3: リファクタリング支援
 7. 高度な活用法
 8. まとめと次のステップ
+
+---
+
+# コードベースから特定のパターンを検索したい
+<br/>
+
+**ex: Prettierのコードから、isNode関数の呼び出しを全て見つけたい**
+
+<ul v-pre>
+<li>文字列で検索する</li>
+<li>正規表現で検索する</li>
+</ul>
+
+🤔
 
 ---
 
@@ -109,7 +126,8 @@ $ grep -E "isNode\(.*\[.*\]\)" src/
 ```
 
 <ul v-pre>
-<li>改行を跨ぐパターンには対応しづらい</li>
+<li>改行を跨ぐパターンには対応しづらい<br/>
+    grep -Pzo などのoptionを使えば可能ではある</li>
 <li>ネストした構造の表現が複雑</li>
 <li>パターンが長くなる傾向</li>
 </ul>
@@ -133,31 +151,33 @@ isNode(node, [
 
 ---
 
-# ast-grep
-
-<TwoColumnLayout>
-  <template #left>
+# 👀 コードをASTに変換しての検索
+<br/>
 
 **AST (Abstract Syntax Tree) = 抽象構文木**
 
-ast-grep はコードを構文木として扱う
+コードをASTにParse<br/>
+**→ ASTから「関数呼び出し」のNodeみを検索可能**
 
-  </template>
-  <template #right>
 
-```
+```javascript
+// コードをASTとして解析
 isNode(node, ["type"])
-         ↓
-    ┌────┴────┐
- call_expr
-    ├─ identifier: "isNode"
-    ├─ arg[0]: identifier "node"
-    └─ arg[1]: array
-         └─ string: "type"
 ```
 
-  </template>
-</TwoColumnLayout>
+```yaml
+# AST表現（簡略化）
+CallExpression:
+  callee:
+    name: "isNode"
+  arguments:
+    - Identifier: "node"
+    - ArrayExpression:
+        - "type"
+```
+<!---->
+<!--   </template> -->
+<!-- </TwoColumnLayout> -->
 
 ---
 
@@ -167,12 +187,58 @@ isNode(node, ["type"])
 |------|------|------|-------------------|---------|
 | **grep** | 高 | 低 | 非対応 | 非対応 |
 | **正規表現** | 中 | 中 | 部分的 | 非対応 |
-| **ast-grep** | 低 | 高 | 対応 | 対応 |
+| **ASTを利用** | 低 | 高 | 対応 | 対応 |
 
 **ast-grepの用途:**
-- リファクタリング
-- コードパターンの検出
-- 構造的な置換
+- 厳密性のあるコードパターンの検索
+- 検索パターンをymlで管理, 共有
+- 構文木で一致するコードの一括置換
+- 特定言語に依存しない汎用ツールである
+
+---
+
+# ast-grep : ASTベースの検索ツール
+
+<TwoColumnLayout>
+  <template #left>
+
+**ast-grepの特徴**
+
+<ul>
+    <li>コードの構造検索・置換を行う</li>
+    <li>20種類以上のプログラミング言語に対応 </li>
+</ul>
+<div>
+    <blockquote cite="https://www.huxley.net/bnw/four.html">
+        <p>
+          構文解析機能を備えたgrep/sedのようなものと考えてください。<br/>
+          AST（抽象構文木）に基づいてコードを検索・修正するためのパターンを記述でき、数千ものファイルに対してインタラクティブに操作を行うことが可能です。
+        </p>
+    </blockquote>
+    <a href="https://ast-grep.github.io/">https://ast-grep.github.io/</a>
+</div>
+
+</template>
+<template #right>
+
+**ast-grepが理解するコード構造**
+
+```javascript
+// 検索対象コード
+isNode(node, ["type1", "type2"])
+```
+
+```yaml
+# ast-grepのパターンマッチング
+pattern: isNode($NODE, $TYPES)
+
+# マッチする箇所
+$NODE  → node
+$TYPES → ["type1", "type2"]
+```
+
+  </template>
+</TwoColumnLayout>
 
 ---
 
@@ -180,9 +246,9 @@ isNode(node, ["type"])
 
 | メタ変数 | 説明 | 使用例 |
 |---------|------|--------|
-| `$VAR` | 単一ノードにマッチ | `$VAR.method()` |
-| `$$$` | 0個以上のノードにマッチ | `func($$$)` |
-| `$$MULTI` | 名前付き複数ノード | `func($$ARGS)` |
+| $VAR | 単一ノードにマッチ | $VAR.method() |
+| $$$ | 0個以上のノードにマッチ | func($$$) |
+| $$MULTI | 名前付き複数ノード | func($$ARGS) |
 
 **例:**
 ```javascript
@@ -214,16 +280,12 @@ ast-grep scan --rule rule.yml [ディレクトリ]
 ---
 
 # 実践例1 - フォーマット非依存検索
+<br/>
 
-<TwoColumnLayout>
-  <template #left>
+**ref : github.com/prettier/prettier**
 
-**prettierコードベースでの実例:**
-
-構造的には同一
-
-  </template>
-  <template #right>
+Parse結果としての構文木は同一<br/>
+WhiteSpaceなどの情報はParserの字句解析時点で除去される
 
 ```javascript
 // パターン1: 1行
@@ -240,10 +302,6 @@ isNode(node, [
 // パターン3: スペースなし
 isNode(node,["type"])
 ```
-
-  </template>
-</TwoColumnLayout>
-
 ---
 
 # フォーマット非依存検索 - grepの場合
@@ -256,8 +314,8 @@ $ grep "isNode.*\[" src/language-yaml/
 ```
 
 <ul v-pre>
-<li>改行を跨ぐパターンを検出できない</li>
-<li>正規表現を複雑にしても限界がある</li>
+<li>Defaultで改行を跨ぐパターンを検出できない</li>
+<li>複雑な正規表現は認知負荷が高い</li>
 </ul>
 
   </template>
@@ -266,7 +324,7 @@ $ grep "isNode.*\[" src/language-yaml/
 ```
 ✅ isNode(node, ["sequence", "mapping"])
 ✅ isNode(node,["type"])
-❌ isNode(node, [     # 複数行は検出できない
+❌ isNode(node, [\n     # 複数行は検出できない
 ```
 
   </template>
@@ -306,8 +364,6 @@ $ ast-grep --lang js --pattern 'isNode($NODE, [$$$])' src/language-yaml/
 
 # 実際の検出結果
 
-**prettierリポジトリでの実行結果**
-
 ```
 src/language-yaml/print/misc.js:32:
     !isNode(node, [
@@ -328,53 +384,58 @@ src/language-yaml/printer-yaml.js:115:
 
 ---
 
-# 実践例2 - API使用パターンの検出
+# 実践例2 - 空配列チェックパターンの検出
 
-<TwoColumnLayout>
-  <template #left>
+<!-- <TwoColumnLayout> -->
+<!--   <template #left> -->
+<br/>
 
-**prettierでの実例: デバッグコードの検出**
+**prettierでの実例: 配列の存在と要素チェック**
 
-**目的: このデバッグコードを一括検出したい**
+**目的: 空でない配列をチェックする様々なパターンを検出**
 
-  </template>
-  <template #right>
+  <!-- </template> -->
+  <!-- <template #right> -->
 
 ```javascript
-// src/language-yaml/printer-yaml.js より
-const DEBUG = node.type === 'plain' && node.value === 'key';
-if (DEBUG) console.error('\n🔵 Starting...');
+// prettierで見られるパターン
+// パターン1: 長さチェック
+if (array && array.length > 0)
 
-if (node.type !== "mappingValue" && hasLeadingComments(node)) {
-  if (DEBUG) console.error('  ➕ [領域1] leadingComments');
-  parts.push(...);
-}
+// パターン2: 論理AND
+if (array && array.length)
 
-// ... さらに10箇所以上続く
+// パターン3: ユーティリティ関数
+if (isNonEmptyArray(array))
+
+// パターン4: Optional chaining
+if (array?.length > 0)
 ```
 
-  </template>
-</TwoColumnLayout>
+<!--   </template> -->
+<!-- </TwoColumnLayout> -->
 
 ---
 
-# デバッグコード検出 - コマンド
+# 空配列チェックパターンの検出
 
 ```bash
-$ ast-grep --pattern 'if ($DEBUG) console.$METHOD($$$)' \
-    src/language-yaml/printer-yaml.js
+# パターン1: array.length > 0 を検出
+$ ast-grep --pattern 'if ($ARRAY && $ARRAY.length > 0)' src/
+
+# パターン2: isNonEmptyArray関数の使用箇所を検出
+$ ast-grep --pattern 'isNonEmptyArray($ARG)' src/
 ```
 
-**検出結果:**
+**prettierでの実際の検出結果:**
 ```
-✅ Line 84:  if (DEBUG) console.error('  ➕ [領域3+] ...');
-✅ Line 87:  if (DEBUG) console.error('  ➕ [領域3+] ...');
-✅ Line 93:  if (DEBUG) console.error('  ➕ [領域4] ...');
-✅ Line 102: if (DEBUG) console.error('  ➕ [領域5] ...');
-✅ Line 111: if (DEBUG) console.error('  ➕ [領域5] ...');
-✅ Line 116: if (DEBUG) console.error('  ➕ [領域6] ...');
-✅ Line 131: if (DEBUG) console.error('  ➕ [領域7] ...');
-✅ Line 151: if (DEBUG) console.error('  ➕ [領域8] ...');
+✅ src/language-js/print.js:89    if (node.decorators && node.decorators.length > 0)
+✅ src/language-js/utils.js:234   if (comments && comments.length > 0)
+✅ src/common/util.js:45          if (isNonEmptyArray(node.properties))
+✅ src/language-html/print.js:156 if (isNonEmptyArray(node.children))
+✅ src/document/doc-printer.js:78 if (parts && parts.length > 0)
+
+検出件数: 50箇所以上（統一の余地あり）
 ```
 
 ---
@@ -441,16 +502,11 @@ items.at(-1)
 
 # リファクタリング候補の検出
 
-<!-- <TwoColumnLayout> -->
-<!--   <template #left> -->
-
 **実行:**
 ```bash
 $ ast-grep scan --rule modernize-array.yml src/language-yaml/utils.js
 ```
 
-  <!-- </template> -->
-  <!-- <template #right> -->
 <br/>
 ```yaml
 id: modernize-array-access
@@ -461,9 +517,6 @@ rule:
     - pattern: $ARR.slice(-1)[0]
 message: Consider using modern array.at(-1) syntax
 ```
-
-<!--   </template> -->
-<!-- </TwoColumnLayout> -->
 
 ---
 
@@ -491,12 +544,16 @@ help[modernize-array-access]:
     │ ^^^^^^^^^^^^^^^^^^^^^^^
 ```
 
-**3箇所のリファクタリング候補を発見!**
+**3箇所のリファクタリング候補を発見**
 
 ---
 
 # 自動置換の実行
 
+<TwoColumnLayout>
+  <template #left>
+
+**基本の置換コマンド:**
 ```bash
 $ ast-grep --lang js \
   --pattern '$ARR[$ARR.length - 1]' \
@@ -504,33 +561,50 @@ $ ast-grep --lang js \
   src/language-yaml/utils.js
 ```
 
-**プレビュー結果:**
-```diff
-- lines[lines.length - 1] = [...lines.at(-1), ...words];
-+ lines.at(-1) = [...lines.at(-1), ...words];
+**重要なオプション:**
+<ul v-pre>
+<li>--pattern: 検索パターン</li>
+<li>--rewrite: 置換パターン</li>
+<li>--update-all: プレビューではなく実際に更新</li>
+<li>--interactive: 対話的に確認しながら置換</li>
+</ul>
 
-- words[words.length - 1] += " " + word;
-+ words.at(-1) += " " + word;
+  </template>
+  <template #right>
+
+**実際の置換結果（--update-all適用後）:**
+
+<div class="diff-block">
+
+```js
+// before
+const lastLine = lines[lines.length - 1];
+return arr[arr.length - 1] || defaultValue;
+const last = words[words.length - 1];
 ```
 
-**`--update-all` で実際に適用可能**
+```js
+// after
+const lastLine = lines.at(-1);
+return arr.at(-1) || defaultValue;
+const last = words.at(-1);
+```
+
+</div>
+
+  </template>
+</TwoColumnLayout>
 
 ---
 
 # 高度な使用例 - 条件の組み合わせ
 
-<TwoColumnLayout>
-  <template #left>
-
 <ul v-pre>
-<li><code>all</code>: すべての条件を満たす</li>
-<li><code>any</code>: いずれかの条件を満たす</li>
-<li><code>not</code>: 条件を満たさない</li>
-<li><code>inside</code>: 特定のスコープ内</li>
+<li>all : すべての条件を満たす</li>
+<li>any : いずれかの条件を満たす</li>
+<li>not : 条件を満たさない</li>
+<li>inside : 特定のスコープ内</li>
 </ul>
-
-  </template>
-  <template #right>
 
 ```yaml
 id: complex-pattern
@@ -545,9 +619,6 @@ rule:
         pattern: function $FUNC($$$) { $$$ }
 message: Non-production console statement found
 ```
-
-  </template>
-</TwoColumnLayout>
 
 ---
 
@@ -582,14 +653,14 @@ rule:
 
 ---
 
-# メタ変数の高度な活用
+# メタ変数の高度な使用法
 
 **パターン:**
 ```javascript
 $ARR[$ARR.length - 1]
 ```
 
-**重要:** `$ARR` が2回出現 = **同じ変数**である必要がある
+**重要:** $ARR が2回出現 = **同じ変数**である必要がある
 
 **マッチする:**
 ```javascript
@@ -611,9 +682,6 @@ lines[words.length - 1]  // ❌ 異なる変数
 
 **Node.jsでの典型的な脆弱性:**
 
-  </template>
-  <template #right>
-
 ```javascript
 // コマンドインジェクション
 exec('cat ' + userInput, cb);  // 危険
@@ -624,6 +692,9 @@ eval(getUserInput());  // 危険
 // パストラバーサル
 fs.readFile('./uploads/' + file, cb);  // 危険
 ```
+
+  </template>
+  <template #right>
 
 **検出ルール例:**
 ```yaml
@@ -640,83 +711,31 @@ severity: error
 
 ---
 
-# ast-grepの特徴
-
-| 特徴 | 説明 |
-|------|------|
-| **高精度** | コードの構造を理解、誤検出が少ない |
-| **フォーマット非依存** | インデント・改行に左右されない |
-| **構造保持** | 構造を保ったまま変更可能 |
-| **一括変更** | 大規模なリファクタリングに対応 |
-| **多言語対応** | JS, TS, Rust, Python, Go等 |
-
----
-
-# ast-grepの特性
-
-**特性:**
-- **学習コスト**: パターン構文の習得が必要
-- **パフォーマンス**: 大規模コードベースでは処理時間がかかる
-- **言語依存**: パーサーが必要（対応言語は限定的）
-- **複雑な構造**: 非常に複雑なパターンは表現が難しい
-
-**使い分け:**
-- シンプルな文字列検索 → `grep`
-- コード構造の検索・置換 → `ast-grep`
-
----
-
-# 実用シーン別の使い分け
-
-**ast-grepの用途:**
-- API変更に伴うコード更新
-- コーディング規約の検査
-- 構文の移行
-- 特定のパターンの一括検出
-
-**grepの用途:**
-- ファイル名の検索
-- 文字列リテラルの検索
-- 単純なキーワード検索
-- ログの検索
-
----
-
-# 実践的な活用フロー
-
-```
-1. パターンの特定
-   ↓
-2. ast-grepで検索
-   ↓
-3. 検出結果の確認
-   ↓
-4. ルールファイルの作成
-   ↓
-5. --rewriteでプレビュー
-   ↓
-6. テスト実行
-   ↓
-7. --update-all で適用
-```
-
-**注意: バージョン管理下での実行を推奨**
-
----
-
-# prettierでの具体的な成果
-
-| ケース | 検出数 | ファイル |
-|--------|--------|---------|
-| **デバッグコード** | 10+ | `printer-yaml.js` |
-| **isNode呼び出し** | 10+ | `language-yaml/*` |
-| **古い配列アクセス** | 3 | `utils.js` |
-| **型チェックパターン** | 1 | `utils.js` |
-| **switch文** | 1 | `printer-yaml.js` |
-
-**すべて実際のprettierコードベースから抽出**
-
----
+<!-- # ast-grepの特徴 -->
+<!---->
+<!-- | 特徴 | 説明 | -->
+<!-- |------|------| -->
+<!-- | **高精度** | コードの構造を理解、誤検出が少ない | -->
+<!-- | **フォーマット非依存** | インデント・改行に左右されない | -->
+<!-- | **構造保持** | 構造を保ったまま変更可能 | -->
+<!-- | **一括変更** | 大規模なリファクタリングに対応 | -->
+<!-- | **多言語対応** | JS, TS, Rust, Python, Go等 | -->
+<!---->
+<!-- --- -->
+<!---->
+<!-- # ast-grepの特性 -->
+<!---->
+<!-- **特性:** -->
+<!-- - **学習コスト**: パターン構文の習得が必要 -->
+<!-- - **パフォーマンス**: 大規模コードベースでは処理時間がかかる -->
+<!-- - **言語依存**: パーサーが必要（対応言語は限定的） -->
+<!-- - **複雑な構造**: 非常に複雑なパターンは表現が難しい -->
+<!---->
+<!-- **使い分け:** -->
+<!-- - シンプルな文字列検索 → `grep` -->
+<!-- - コード構造の検索・置換 → `ast-grep` -->
+<!---->
+<!-- --- -->
 
 # インストールと環境構築
 
@@ -742,82 +761,13 @@ ast-grep --version
 # 学習リソース
 
 **公式リソース:**
-- 📖 **公式ドキュメント**: https://ast-grep.github.io/
-- 🎮 **Playground**: https://ast-grep.github.io/playground.html
-- 📘 **パターン構文ガイド**: https://ast-grep.github.io/guide/pattern-syntax.html
-- 💻 **GitHub**: https://github.com/ast-grep/ast-grep
+- **公式ドキュメント**: https://ast-grep.github.io/
+- **Playground**: https://ast-grep.github.io/playground.html
+- **パターン構文ガイド**: https://ast-grep.github.io/guide/pattern-syntax.html
+- **GitHub**: https://github.com/ast-grep/ast-grep
 
-**実践:**
-- prettierリポジトリで試す
-- 自分のプロジェクトで実験
-- カスタムルールを作成
-
----
-
-# 次のステップ
-
-**1. 動作確認**
-```bash
-git clone https://github.com/prettier/prettier.git
-cd prettier
-ast-grep --lang js --pattern 'console.$METHOD($$$)' src/
-```
-
-**2. 自分のプロジェクトで**
-- よく使うパターンを特定
-- ルールファイルを作成
-- CI/CDに組み込む
-
-**3. チームで共有**
-- プロジェクト共通のルール作成
-- コードレビューに活用
-- リファクタリング計画に活用
-
----
-
-# まとめ
-
-**キーポイント:**
-- **AST (構文木) ベースの検索**
-- **フォーマット非依存・高精度**
-- **検索だけでなく置換も可能**
-- **大規模リファクタリングに対応**
-
-**基本コマンド:**
-```bash
-# 基本検索
-ast-grep --pattern 'PATTERN' file
-
-# 置換
-ast-grep --pattern 'OLD' --rewrite 'NEW' file
-
-# ルール検索
-ast-grep scan --rule rule.yml dir
-```
-
----
-
-# 補足資料
-
-**同梱ファイル:**
-- `ast-grep-examples.sh` - 10個の実行可能な例
-- `ast-grep-knowledge-base.md` - 詳細ドキュメント（元資料）
-
-**実行方法:**
-```bash
-cd /path/to/prettier
-./ast-grep-examples.sh
-```
-
-すべての例がそのまま動作します。
-
----
-layout: center
-class: text-center
 ---
 
 # ご清聴ありがとうございました
 
-**スライド作成日**: 2025-11-22
-**ベース**: prettier main branch
-**サンプルコード**: すべて実在のコードから抽出
+👋
