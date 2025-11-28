@@ -59,19 +59,6 @@ Prettierのバグを直したり、自作のRust製Ruby Code Formatterを公開�
 
 ---
 
-# アジェンダ
-
-1. 従来の検索手法
-2. ast-grepとは何か
-3. 基本的な使い方
-4. 実践例1: フォーマット非依存検索
-5. 実践例2: API使用パターン検出
-6. 実践例3: リファクタリング支援
-7. 高度な活用法
-8. まとめと次のステップ
-
----
-
 # コードベースから特定のパターンを検索したい
 <br/>
 
@@ -181,16 +168,6 @@ CallExpression:
 
 ---
 
-# 検索方式の比較表
-
-| 方式 | 速度 | 精度 | フォーマット非依存 | 構造理解 |
-|------|------|------|-------------------|---------|
-| **grep** | 高 | 低 | 非対応 | 非対応 |
-| **正規表現** | 中 | 中 | 部分的 | 非対応 |
-| **ASTを利用** | 低 | 高 | 対応 | 対応 |
-
----
-
 # ast-grep : ASTベースの検索ツール
 
 <TwoColumnLayout>
@@ -234,44 +211,25 @@ $TYPES → ["type1", "type2"]
   </template>
 </TwoColumnLayout>
 
----
-
-# ast-grepの基本 - メタ変数
-
-| メタ変数 | 説明 | 使用例 |
-|---------|------|--------|
-| $VAR | 単一ノードにマッチ | $VAR.method() |
-| $$$ | 0個以上のノードにマッチ | func($$$) |
-| $$MULTI | 名前付き複数ノード | func($$ARGS) |
-
-**例:**
-```javascript
-// パターン: console.$METHOD($$$)
-console.log("hello")        // マッチ
-console.error("error", e)   // マッチ
-console.warn()              // マッチ
-```
-
----
-
-<!-- # 基本コマンド -->
-<!---->
-<!-- **1. パターン検索** -->
-<!-- ```bash -->
-<!-- ast-grep --lang js --pattern 'PATTERN' [ファイル] -->
-<!-- ``` -->
-<!---->
-<!-- **2. 置換（プレビュー）** -->
-<!-- ```bash -->
-<!-- ast-grep --pattern 'OLD' --rewrite 'NEW' [ファイル] -->
-<!-- ``` -->
-<!---->
-<!-- **3. YAMLルールで検索** -->
-<!-- ```bash -->
-<!-- ast-grep scan --rule rule.yml [ディレクトリ] -->
-<!-- ``` -->
-<!---->
 <!-- --- -->
+<!---->
+<!-- # ast-grepの基本 - メタ変数 -->
+<!---->
+<!-- | メタ変数 | 説明 | 使用例 | -->
+<!-- |---------|------|--------| -->
+<!-- | $VAR | 単一ノードにマッチ | $VAR.method() | -->
+<!-- | $$$ | 0個以上のノードにマッチ | func($$$) | -->
+<!-- | $$MULTI | 名前付き複数ノード | func($$ARGS) | -->
+<!---->
+<!-- **例:** -->
+<!-- ```javascript -->
+<!-- // パターン: console.$METHOD($$$) -->
+<!-- console.log("hello")        // マッチ -->
+<!-- console.error("error", e)   // マッチ -->
+<!-- console.warn()              // マッチ -->
+<!-- ``` -->
+
+---
 
 # 実践例1 - フォーマット非依存検索
 <br/>
@@ -296,33 +254,6 @@ isNode(node, [
 // パターン3: スペースなし
 isNode(node,["type"])
 ```
----
-
-# フォーマット非依存検索 - grepの場合
-
-<TwoColumnLayout>
-  <template #left>
-
-```bash
-$ grep "isNode.*\[" src/language-yaml/
-```
-
-<ul v-pre>
-<li>Defaultで改行を跨ぐパターンを検出できない</li>
-<li>複雑な正規表現は認知負荷が高い</li>
-</ul>
-
-  </template>
-  <template #right>
-
-```
-✅ isNode(node, ["sequence", "mapping"])
-✅ isNode(node,["type"])
-❌ isNode(node, [\n     // 複数行は検出できない
-```
-
-  </template>
-</TwoColumnLayout>
 
 ---
 
@@ -353,84 +284,6 @@ $ ast-grep --lang js --pattern 'isNode($NODE, [$$$])' src/language-yaml/
 
 <!--   </template> -->
 <!-- </TwoColumnLayout> -->
-
----
-
-# 実際の検出結果
-
-```
-// src/language-yaml/print/misc.js:32:
-    !isNode(node, [
-      "documentHead",
-      "documentBody",
-      "flowMapping",
-      "flowSequence",
-    ])
-
-// src/language-yaml/printer-yaml.js:83:
-    if (isNode(node, ["sequence", "mapping"]) && ...)
-
-src/language-yaml/printer-yaml.js:115:
-    if (... && !isNode(node, ["document", "documentHead"]))
-```
-
-**検出件数: 10箇所以上**
-
----
-
-# 実践例2 - 空配列チェックパターンの検出
-
-<!-- <TwoColumnLayout> -->
-<!--   <template #left> -->
-<br/>
-
-**配列の存在と要素チェック**
-
-**目的: 空でない配列をチェックする様々なパターンを検出**
-
-  <!-- </template> -->
-  <!-- <template #right> -->
-
-```javascript
-// prettierで見られるパターン
-// パターン1: 長さチェック
-if (array && array.length > 0)
-
-// パターン2: 論理AND
-if (array && array.length)
-
-// パターン3: ユーティリティ関数
-if (isNonEmptyArray(array))
-
-// パターン4: Optional chaining
-if (array?.length > 0)
-```
-
-<!--   </template> -->
-<!-- </TwoColumnLayout> -->
-
----
-
-# 空配列チェックパターンの検出
-
-```bash
-# パターン1: array.length > 0 を検出
-$ ast-grep --pattern 'if ($ARRAY && $ARRAY.length > 0)' src/
-
-# パターン2: isNonEmptyArray関数の使用箇所を検出
-$ ast-grep --pattern 'isNonEmptyArray($ARG)' src/
-```
-
-**検出結果:**
-```
-✅ src/language-js/print.js:89    if (node.decorators && node.decorators.length > 0)
-✅ src/language-js/utils.js:234   if (comments && comments.length > 0)
-✅ src/common/util.js:45          if (isNonEmptyArray(node.properties))
-✅ src/language-html/print.js:156 if (isNonEmptyArray(node.children))
-✅ src/document/doc-printer.js:78 if (parts && parts.length > 0)
-
-検出件数: 50箇所以上（統一の余地あり）
-```
 
 ---
 
@@ -591,119 +444,119 @@ const last = words.at(-1);
 
 ---
 
-# 高度な使用例 - 条件の組み合わせ
+<!-- # 高度な使用例 - 条件の組み合わせ -->
+<!---->
+<!-- <ul v-pre> -->
+<!-- <li>all : すべての条件を満たす</li> -->
+<!-- <li>any : いずれかの条件を満たす</li> -->
+<!-- <li>not : 条件を満たさない</li> -->
+<!-- <li>inside : 特定のスコープ内</li> -->
+<!-- </ul> -->
+<!---->
+<!-- ```yaml -->
+<!-- id: complex-pattern -->
+<!-- language: js -->
+<!-- rule: -->
+<!--   all: -->
+<!--     - pattern: if ($COND) console.$METHOD($$$) -->
+<!--     - not: -->
+<!--         pattern: if (process.env.DEBUG) console.log($$$) -->
+<!--   any: -->
+<!--     - inside: -->
+<!--         pattern: function $FUNC($$$) { $$$ } -->
+<!-- message: Non-production console statement found -->
+<!-- ``` -->
+<!---->
+<!-- --- -->
+<!---->
+<!-- # 高度な使用例 - スコープ検索 -->
+<!---->
+<!-- <TwoColumnLayout> -->
+<!--   <template #left> -->
+<!---->
+<!-- <ul v-pre> -->
+<!-- <li>特定のswitch caseの処理を検索</li> -->
+<!-- <li>関数内の特定パターンのみ検出</li> -->
+<!-- <li>クラスメソッド内の処理を検索</li> -->
+<!-- </ul> -->
+<!---->
+<!--   </template> -->
+<!--   <template #right> -->
+<!---->
+<!-- ```yaml -->
+<!-- id: find-in-switch -->
+<!-- language: js -->
+<!-- rule: -->
+<!--   pattern: | -->
+<!--     switch ($EXPR) { -->
+<!--       $$$ -->
+<!--       case "root": { $$$BODY } -->
+<!--       $$$ -->
+<!--     } -->
+<!-- ``` -->
+<!---->
+<!--   </template> -->
+<!-- </TwoColumnLayout> -->
+<!---->
+<!-- --- -->
+<!---->
+<!-- # メタ変数の高度な使用法 -->
+<!---->
+<!-- **パターン:** -->
+<!-- ```javascript -->
+<!-- $ARR[$ARR.length - 1] -->
+<!-- ``` -->
+<!---->
+<!-- **重要:** $ARR が2回出現 = **同じ変数**である必要がある -->
+<!---->
+<!-- **マッチする:** -->
+<!-- ```javascript -->
+<!-- lines[lines.length - 1]  // ✅ lines が2回 -->
+<!-- words[words.length - 1]  // ✅ words が2回 -->
+<!-- ``` -->
+<!---->
+<!-- **マッチしない:** -->
+<!-- ```javascript -->
+<!-- lines[words.length - 1]  // ❌ 異なる変数 -->
+<!-- ``` -->
+<!---->
+<!-- --- -->
 
-<ul v-pre>
-<li>all : すべての条件を満たす</li>
-<li>any : いずれかの条件を満たす</li>
-<li>not : 条件を満たさない</li>
-<li>inside : 特定のスコープ内</li>
-</ul>
-
-```yaml
-id: complex-pattern
-language: js
-rule:
-  all:
-    - pattern: if ($COND) console.$METHOD($$$)
-    - not:
-        pattern: if (process.env.DEBUG) console.log($$$)
-  any:
-    - inside:
-        pattern: function $FUNC($$$) { $$$ }
-message: Non-production console statement found
-```
-
----
-
-# 高度な使用例 - スコープ検索
-
-<TwoColumnLayout>
-  <template #left>
-
-<ul v-pre>
-<li>特定のswitch caseの処理を検索</li>
-<li>関数内の特定パターンのみ検出</li>
-<li>クラスメソッド内の処理を検索</li>
-</ul>
-
-  </template>
-  <template #right>
-
-```yaml
-id: find-in-switch
-language: js
-rule:
-  pattern: |
-    switch ($EXPR) {
-      $$$
-      case "root": { $$$BODY }
-      $$$
-    }
-```
-
-  </template>
-</TwoColumnLayout>
-
----
-
-# メタ変数の高度な使用法
-
-**パターン:**
-```javascript
-$ARR[$ARR.length - 1]
-```
-
-**重要:** $ARR が2回出現 = **同じ変数**である必要がある
-
-**マッチする:**
-```javascript
-lines[lines.length - 1]  // ✅ lines が2回
-words[words.length - 1]  // ✅ words が2回
-```
-
-**マッチしない:**
-```javascript
-lines[words.length - 1]  // ❌ 異なる変数
-```
-
----
-
-# セキュリティチェックの例
-
-<TwoColumnLayout>
-  <template #left>
-
-**Node.jsでの典型的な脆弱性:**
-
-```javascript
-// コマンドインジェクション
-exec('cat ' + userInput, cb);  // 危険
-
-// eval使用
-eval(getUserInput());  // 危険
-
-// パストラバーサル
-fs.readFile('./uploads/' + file, cb);  // 危険
-```
-
-  </template>
-  <template #right>
-
-**検出ルール例:**
-```yaml
-id: detect-command-injection
-language: js
-rule:
-  pattern: exec($STR + $VAR, $$$)
-message: Potential command injection
-severity: error
-```
-
-  </template>
-</TwoColumnLayout>
-
----
+<!-- # セキュリティチェックの例 -->
+<!---->
+<!-- <TwoColumnLayout> -->
+<!--   <template #left> -->
+<!---->
+<!-- **Node.jsでの典型的な脆弱性:** -->
+<!---->
+<!-- ```javascript -->
+<!-- // コマンドインジェクション -->
+<!-- exec('cat ' + userInput, cb);  // 危険 -->
+<!---->
+<!-- // eval使用 -->
+<!-- eval(getUserInput());  // 危険 -->
+<!---->
+<!-- // パストラバーサル -->
+<!-- fs.readFile('./uploads/' + file, cb);  // 危険 -->
+<!-- ``` -->
+<!---->
+<!--   </template> -->
+<!--   <template #right> -->
+<!---->
+<!-- **検出ルール例:** -->
+<!-- ```yaml -->
+<!-- id: detect-command-injection -->
+<!-- language: js -->
+<!-- rule: -->
+<!--   pattern: exec($STR + $VAR, $$$) -->
+<!-- message: Potential command injection -->
+<!-- severity: error -->
+<!-- ``` -->
+<!---->
+<!--   </template> -->
+<!-- </TwoColumnLayout> -->
+<!---->
+<!-- --- -->
 
 <!-- # ast-grepの特徴 -->
 <!---->
@@ -739,39 +592,38 @@ severity: error
 - 特定言語に依存しない汎用ツールである
   - 構文解析可能であれば
   - 個別のCustomLintを理解するよりも汎用的な仕組みかな？と思う
-- 使い手次第で色々できる拡張性
 - astに関する知識の隠蔽, toolとしてのinterfaceが優れているなと思う
 
----
-
-# install
-
-**インストール:**
-```bash
-# macOS (Homebrew)
-brew install ast-grep
-
-# bun
-
-bun install @ast-grep/cli
-
-# cargo
-cargo install ast-grep
-```
-
-**動作確認:**
-```bash
-ast-grep --version
-```
-
----
-
-# Reference
-
-- **公式ドキュメント**: https://ast-grep.github.io/
-- **Playground**: https://ast-grep.github.io/playground.html
-- **パターン構文ガイド**: https://ast-grep.github.io/guide/pattern-syntax.html
-- **GitHub**: https://github.com/ast-grep/ast-grep
+<!-- --- -->
+<!---->
+<!-- # install -->
+<!---->
+<!-- **インストール:** -->
+<!-- ```bash -->
+<!-- # macOS (Homebrew) -->
+<!-- brew install ast-grep -->
+<!---->
+<!-- # bun -->
+<!---->
+<!-- bun install @ast-grep/cli -->
+<!---->
+<!-- # cargo -->
+<!-- cargo install ast-grep -->
+<!-- ``` -->
+<!---->
+<!-- **動作確認:** -->
+<!-- ```bash -->
+<!-- ast-grep --version -->
+<!-- ``` -->
+<!---->
+<!-- --- -->
+<!---->
+<!-- # Reference -->
+<!---->
+<!-- - **公式ドキュメント**: https://ast-grep.github.io/ -->
+<!-- - **Playground**: https://ast-grep.github.io/playground.html -->
+<!-- - **パターン構文ガイド**: https://ast-grep.github.io/guide/pattern-syntax.html -->
+<!-- - **GitHub**: https://github.com/ast-grep/ast-grep -->
 
 ---
 layout: center
